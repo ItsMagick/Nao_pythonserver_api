@@ -1,6 +1,7 @@
+from re import L
 from time import sleep, time
 from tokenize import Double
-from turtle import speed
+#from turtle import speed
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import json
 import cgi
@@ -87,12 +88,6 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
-        
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
-
 
 
         if "motion" in jsonMessage["actionId"]:
@@ -117,18 +112,12 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
 
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
-
-        #kein nutzen soweit
         if "wakeUp" in jsonMessage["actionId"]:
             try:
                 motion = ALProxy("ALMotion", str(naoIp), int(naoPort))
 
-                motion.wakeUp(True)
+                motion.wakeUp()
             
             except Exception as e:
                 jsonResponse["success"] = False
@@ -142,11 +131,6 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
-
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
 
 
         if "rest" in jsonMessage["actionId"]:
@@ -167,11 +151,6 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
-
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
 
 
 #########################################################################################################################################################
@@ -206,40 +185,8 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
-
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
-
-
-
-        if "setMaxVolume" in jsonMessage["actionId"]:
-            try:
-                player = ALProxy("ALAudioPlayer", str(naoIp), int(naoPort))
-
-                player.setMasterVolume(float(jsonMessage["data"]["setMaxVolume"]))
-            
-            except Exception as e:
-                jsonResponse["success"] = False
-                jsonResponse["message"] = "Unable to perform action 'setMaxVolume'. Cause: " + str(e)
-
-                self._set_headers()
-                self.wfile.write(json.dumps(jsonResponse))
-
-                return
-
-            self._set_headers()
-            self.wfile.write(json.dumps(jsonResponse))
-
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
-
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
-
-
         
+
         if "audioStop" in jsonMessage["actionId"]:
             try:
                 player = ALProxy("ALAudioPlayer", str(naoIp), int(naoPort))
@@ -258,11 +205,6 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
-
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
 
 
         if "audioRecord" in jsonMessage["actionId"]:
@@ -292,11 +234,6 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
-
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
 
 #########################################################################################################################################################
 
@@ -368,11 +305,7 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
 
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
 
 ########################################################################################################################################
 
@@ -412,20 +345,23 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
 
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
-        
-        ####################################################################################
+####################################################################################
         
         
         if "batteryInfo" in jsonMessage["actionId"]:
             try:
-                batteryProxy = ALProxy("ALBatteryProxy", str(naoIp), int(naoPort))
+                batteryProxy = ALProxy("ALBattery", str(naoIp), int(naoPort))
 
-                batteryPercentage = batteryProxy.getBatteryCharge()
+                batteryPercentage = batteryProxy.getBatteryCharge() 
+                
+                
+                
+                jsonResponse["data"] = {
+                    "batteryInfo" : batteryPercentage
+                }
+                
+                
             
             except Exception as e:
                 jsonResponse["success"] = False
@@ -439,20 +375,17 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
-
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
        
-       ####################################################################################
+####################################################################################
         
         if "language" in jsonMessage["actionId"]:
             try:
-                languageProxy = ALProxy("ALDialogProxy", str(naoIp), int(naoPort))
+                languageProxy = ALProxy("ALDialog", str(naoIp), int(naoPort))
+                
+                language = str(jsonMessage["data"]["language"])
 
-                languageProxy.setLanguage(str(jsonMessage["data"]["language"]))
-                # data: "language = "German"
+                languageProxy.setLanguage(language)
+                
             
             except Exception as e:
                 jsonResponse["success"] = False
@@ -466,16 +399,103 @@ class Server(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps(jsonResponse))
 
-        jsonResponse['success'] = False
-        jsonResponse['message'] = "Unable to find the sent action-ID."
+        
+        
+####################################################################################
+        
+        if "setOutputVolume" in jsonMessage["actionId"]:
+            try:
+                deviceVolume = ALProxy("ALAudioDevice", str(naoIp), int(naoPort))
+                
+                volume = int(jsonMessage["data"]["setOutputVolume"])
 
-        self._set_headers()
-        self.wfile.write(json.dumps(jsonMessage))
+                deviceVolume.setOutputVolume(volume)
+            
+            except Exception as e:
+                jsonResponse["success"] = False
+                jsonResponse["message"] = "Unable to perform action 'setOutputVolume'. Cause: " + str(e)
+
+                self._set_headers()
+                self.wfile.write(json.dumps(jsonResponse))
+
+                return
+
+            self._set_headers()
+            self.wfile.write(json.dumps(jsonResponse))
+
+
         
+####################################################################################
         
+        if "shutdown" in jsonMessage["actionId"]:
+            try:
+                deviceSystem = ALProxy("ALSystem", str(naoIp), int(naoPort))
+                
+                deviceSystem.shutdown()
+                
+
+            
+            except Exception as e:
+                jsonResponse["success"] = False
+                jsonResponse["message"] = "Unable to perform action 'setOutputVolume'. Cause: " + str(e)
+
+                self._set_headers()
+                self.wfile.write(json.dumps(jsonResponse))
+
+                return
+
+            self._set_headers()
+            self.wfile.write(json.dumps(jsonResponse))
       
 
+####################################################################################
+        
+        if "reboot" in jsonMessage["actionId"]:
+            try:
+                deviceSystem = ALProxy("ALSystem", str(naoIp), int(naoPort))
+                
+                deviceSystem.reboot()
+                
 
+            
+            except Exception as e:
+                jsonResponse["success"] = False
+                jsonResponse["message"] = "Unable to perform action 'setOutputVolume'. Cause: " + str(e)
+
+                self._set_headers()
+                self.wfile.write(json.dumps(jsonResponse))
+
+                return
+
+            self._set_headers()
+            self.wfile.write(json.dumps(jsonResponse))
+      
+####################################################################################
+        
+        if "cpuTemp" in jsonMessage["actionId"]:
+            try:
+                deviceSystem = ALProxy("ALSystem", str(naoIp), int(naoPort))
+                
+                temp = deviceSystem.totalMemory()
+                
+                jsonResponse["data"] = {
+                    "batteryInfo" : temp
+                }
+                
+
+            
+            except Exception as e:
+                jsonResponse["success"] = False
+                jsonResponse["message"] = "Unable to perform action 'setOutputVolume'. Cause: " + str(e)
+
+                self._set_headers()
+                self.wfile.write(json.dumps(jsonResponse))
+
+                return
+
+            self._set_headers()
+            self.wfile.write(json.dumps(jsonResponse))
+      
 
 def StiffnessOn(proxy):
     # We use the "Body" name to signify the collection of all joints
